@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Production Line Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg-primary: #f1f5f9;
+        --bg-card: #ffffff;
+        --bg-card2: #f8fafc;
+        --border: #e2e8f0;
+
+        --accent-blue: #2563eb;
+        --accent-cyan: #06b6d4;
+        --accent-green: #10b981;
+        --accent-red: #ef4444;  
+        --accent-orange: #f59e0b;
+        --accent-purple: #8b5cf6;
+
+        --text-primary: #0f172a;
+        --text-muted: #64748b;
+        --text-dim: #94a3b8;
+
+        --glow-blue: 0 0 10px rgba(37, 99, 235, 0.15);
+        --glow-green: 0 0 10px rgba(16, 185, 129, 0.15);
+        --glow-red: 0 0 10px rgba(239, 68, 68, 0.15);
+
+        --radius-sm: 10px;
+        --radius: 16px;
+        --radius-lg: 20px;
+
+        --font-display: "Rajdhani", sans-serif;
+        --font-body: "Barlow", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+
+        --header-h: 58px;
+        --kpi-h: 108px;
+        --info-h: 52px;
+        --status-h: 34px;
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        font-family: var(--font-body);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      /* subtle dot-grid background */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 28px 28px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      #app {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 10px 12px;
+        gap: 10px;
+      }
+
+      /* ── HEADER ── */
+      header {
+        flex: 0 0 var(--header-h);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 0 20px;
+        gap: 16px;
+      }
+
+      .header-left { display: flex; align-items: center; gap: 16px; }
+      .header-right { display: flex; align-items: center; gap: 14px; }
+
+      .logo-box {
+        width: 36px; height: 36px;
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-display); font-weight: 700; font-size: 14px; color: #fff;
+        flex-shrink: 0;
+      }
+
+      .header-title h1 { font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: 0.5px; color: var(--text-primary); }
+      .header-title p  { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+      .divider-v { width: 1px; height: 28px; background: var(--border-strong); }
+
+      .select-group { display: flex; align-items: center; gap: 8px; }
+      .select-label { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+
+      select.hdr-select {
+        height: 30px; font-size: 12px; font-family: var(--font-mono);
+        padding: 0 28px 0 10px;
+        background: var(--bg-card2);
+        border: 1px solid var(--border-strong);
+        border-radius: 8px; color: var(--text-primary); cursor: pointer;
+        outline: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+      }
+      select.hdr-select:focus { border-color: var(--accent-blue); }
+
+      .avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #fff;
+        flex-shrink: 0;
+      }
+      .user-meta span { display: block; font-family: var(--font-mono); }
+      .user-meta .name { font-size: 12px; color: var(--text-primary); font-weight: 500; }
+      .user-meta .role { font-size: 10px; color: var(--text-muted); }
+
+      .clock-block { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+      #live-time { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: 1px; }
+      #live-date { font-family: var(--font-mono); font-size: 10px; color: var(--accent-cyan); background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.25); padding: 2px 8px; border-radius: 5px; }
+
+      /* ── KPI STRIP ── */
+      .kpi-strip {
+        flex: 0 0 var(--kpi-h);
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+      }
+
+      .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: default;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .kpi-card::after {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+      .kpi-card.blue::after   { background: var(--accent-blue); box-shadow: 0 0 14px rgba(59,130,246,0.5); }
+      .kpi-card.green::after  { background: var(--accent-green); box-shadow: 0 0 14px rgba(16,185,129,0.5); }
+      .kpi-card.red::after    { background: var(--accent-red); box-shadow: 0 0 14px rgba(244,63,94,0.5); }
+      .kpi-card.cyan::after   { background: var(--accent-cyan); box-shadow: 0 0 14px rgba(34,211,238,0.4); }
+      .kpi-card.orange::after { background: var(--accent-orange); box-shadow: 0 0 14px rgba(245,158,11,0.4); }
+
+      .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+
+      .kpi-top { display: flex; justify-content: space-between; align-items: center; }
+      .kpi-label { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.8px; }
+      .kpi-badge { font-size: 10px; font-family: var(--font-mono); padding: 2px 7px; border-radius: 5px; }
+      .kpi-badge.pos { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+      .kpi-badge.neg { background: rgba(244,63,94,0.15); color: var(--accent-red); }
+
+      .kpi-value { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+      .kpi-card.blue .kpi-value   { color: var(--accent-blue); }
+      .kpi-card.green .kpi-value  { color: var(--accent-green); }
+      .kpi-card.red .kpi-value    { color: var(--accent-red); }
+      .kpi-card.cyan .kpi-value   { color: var(--accent-cyan); }
+      .kpi-card.orange .kpi-value { color: var(--accent-orange); }
+
+      .kpi-icon { position: absolute; bottom: 10px; right: 12px; font-size: 26px; opacity: 0.06; }
+
+      /* ── INFO BAR ── */
+      .info-bar {
+        flex: 0 0 var(--info-h);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .info-cell {
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .info-cell-label { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
+      .info-divider { width: 1px; height: 20px; background: var(--border-strong); }
+      .info-cell-value { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-primary); }
+
+      /* ── MAIN CONTENT ── */
+      .main-area {
+        flex: 1 1 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        min-height: 0;
+      }
+
+      .chart-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; }
+      .card-title { font-family: var(--font-display); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); }
+
+      .pill-group { display: flex; gap: 5px; }
+      .pill-btn {
+        font-size: 10px; font-family: var(--font-mono);
+        padding: 3px 10px; border-radius: 20px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg-card2); color: var(--text-muted);
+        cursor: pointer; transition: all 0.15s;
+      }
+      .pill-btn:hover, .pill-btn.active { background: rgba(59,130,246,0.2); border-color: var(--accent-blue); color: var(--accent-blue); }
+
+      .chart-wrap { flex: 1; min-height: 0; position: relative; }
+
+      .chart-legend { display: flex; gap: 16px; justify-content: center; padding-top: 8px; flex-shrink: 0; }
+      .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); }
+      .legend-line { width: 24px; height: 3px; border-radius: 2px; }
+      .legend-box  { width: 12px; height: 12px; border-radius: 3px; }
+
+      /* ── BOTTOM ── */
+      .bottom-area {
+        flex: 0 0 160px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .flow-card, .ng-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      /* flow */
+      .flow-grid { display: flex; flex-direction: column; gap: 10px; overflow: hidden; flex: 1; }
+      .flow-row { display: flex; align-items: center; gap: 8px; min-width: max-content; }
+      .flow-node {
+        background: var(--bg-card2); border: 1px solid var(--border-strong);
+        border-radius: 8px; padding: 5px 10px;
+        font-size: 11px; font-family: var(--font-mono); white-space: nowrap;
+        transition: all 0.2s;
+      }
+      .flow-node:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: translateY(-1px); }
+      .flow-arrow { width: 14px; height: 2px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); position: relative; flex-shrink: 0; }
+      .flow-arrow::after {
+        content: ""; position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+        border-left: 6px solid var(--accent-cyan); border-top: 3px solid transparent; border-bottom: 3px solid transparent;
+      }
+
+      /* ng */
+      .ng-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; overflow: hidden; }
+      .ng-col-title { font-size: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.6px; padding-bottom: 6px; border-bottom: 1px solid var(--border-strong); margin-bottom: 6px; }
+      .ng-col-title.mach { color: var(--accent-orange); }
+      .ng-col-title.mat  { color: var(--accent-red); }
+      .ng-rows { overflow-y: auto; }
+      .ng-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; }
+      .ng-time { color: var(--text-muted); }
+      .ng-qty  { color: var(--text-primary); font-weight: 500; }
+
+      /* ── STATUS BAR ── */
+      .status-bar {
+        flex: 0 0 var(--status-h);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--bg-card);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-sm);
+        padding: 0 16px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-muted);
+      }
+
+      .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); margin-right: 6px; animation: pulse 2s infinite; }
+
+      @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+
+      <!-- HEADER -->
+      <header>
+        <div class="header-left">
+          <div class="logo-box">PL</div>
+          <div class="header-title">
+            <h1>Production Line Dashboard</h1>
+            <p id="active-line-label">Loading…</p>
+          </div>
+          <div class="divider-v"></div>
+          <div class="select-group">
+            <span class="select-label">Line</span>
+            <select class="hdr-select" id="select-line" onchange="handleLineChange(this.value)"></select>
+          </div>
+          <div class="select-group">
+            <span class="select-label">Shift</span>
+            <select class="hdr-select" id="select-shift" onchange="handleShiftChange(this.value)"></select>
+          </div>
+        </div>
+        <div class="header-right">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar" id="avatar-initials">U</div>
+            <div class="user-meta">
+              <span class="role" id="user-role">USER</span>
+              <span class="name" id="user-name">—</span>
+            </div>
+          </div>
+          <div class="divider-v"></div>
+          <div class="clock-block">
+            <span id="live-date">—</span>
+            <span id="live-time">—</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- KPI STRIP -->
+      <div class="kpi-strip">
+        <div class="kpi-card blue">
+          <div class="kpi-top">
+            <span class="kpi-label">Total Production</span>
+            <span class="kpi-badge pos" id="kpi-total-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-total">—</div>
+          <div class="kpi-icon">📦</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-top">
+            <span class="kpi-label">Good Product</span>
+            <span class="kpi-badge pos" id="kpi-good-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-good">—</div>
+          <div class="kpi-icon">✅</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-top">
+            <span class="kpi-label">NG Product</span>
+            <span class="kpi-badge neg" id="kpi-ng-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-ng">—</div>
+          <div class="kpi-icon">⚠️</div>
+        </div>
+        <div class="kpi-card cyan">
+          <div class="kpi-top">
+            <span class="kpi-label">Performance</span>
+            <span class="kpi-badge pos" id="kpi-perf-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-perf">—</div>
+          <div class="kpi-icon">⚡</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-top">
+            <span class="kpi-label">Stop Time</span>
+            <span class="kpi-badge neg" id="kpi-stop-badge">—</span>
+          </div>
+          <div class="kpi-value" id="kpi-stop">—</div>
+          <div class="kpi-icon">⏸️</div>
+        </div>
+      </div>
+
+      <!-- INFO BAR -->
+      <div class="info-bar">
+        <div class="info-cell">
+          <span class="info-cell-label">Cycle Time</span>
+          <div class="info-divider"></div>
+          <span class="info-cell-value" id="info-cycle">—</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-cell-label">Model</span>
+          <div class="info-divider"></div>
+          <span class="info-cell-value" id="info-model">—</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-cell-label">Part Number</span>
+          <div class="info-divider"></div>
+          <span class="info-cell-value" id="info-part">—</span>
+        </div>
+        <div class="info-cell">
+          <span class="info-cell-label">Jumlah Operator</span>
+          <div class="info-divider"></div>
+          <span class="info-cell-value" id="info-operator">—</span>
+        </div>
+      </div>
+
+      <!-- MAIN CHARTS -->
+      <div class="main-area">
+        <!-- Good vs NG Trend -->
+        <div class="chart-card">
+          <div class="card-header">
+            <span class="card-title">Good vs NG Product Trend</span>
+            <div class="pill-group">
+              <button class="pill-btn active" onclick="setTrendInterval('hourly',this)">Hourly</button>
+              <button class="pill-btn" onclick="setTrendInterval('daily',this)">Daily</button>
+              <button class="pill-btn" onclick="setTrendInterval('weekly',this)">Weekly</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="trendChart"></canvas>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-line" style="background:#3b82f6"></span>Good</div>
+            <div class="legend-item"><span class="legend-line" style="background:#f59e0b"></span>NG</div>
+            <div class="legend-item"><span class="legend-line" style="background:#10b981;border-top:2px dashed #10b981;height:0"></span>Target</div>
+          </div>
+        </div>
+
+        <!-- Progress Plan vs Actual -->
+        <div class="chart-card">
+          <div class="card-header">
+            <span class="card-title">Progress Plan vs Actual</span>
+            <div class="pill-group">
+              <button class="pill-btn active" onclick="setProgressView('today',this)">Today</button>
+              <button class="pill-btn" onclick="setProgressView('week',this)">Week</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="progressChart"></canvas>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-box" style="background:rgba(59,130,246,0.3)"></span>Plan</div>
+            <div class="legend-item"><span class="legend-box" style="background:#3b82f6"></span>Actual</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM -->
+      <div class="bottom-area">
+        <!-- Flow Process -->
+        <div class="flow-card">
+          <div class="card-header">
+            <span class="card-title">Flow Process</span>
+            <span class="pill-btn" style="cursor:default" id="flow-count">— Processes</span>
+          </div>
+          <div class="flow-grid" id="flow-grid"></div>
+        </div>
+
+        <!-- NG Types -->
+        <div class="ng-card">
+          <div class="card-header">
+            <span class="card-title">NG Types</span>
+            <button class="pill-btn" onclick="refreshNgData()">↻ Refresh</button>
+          </div>
+          <div class="ng-two-col">
+            <div>
+              <div class="ng-col-title mach">Machining Problem</div>
+              <div class="ng-rows" id="ng-mach"></div>
+            </div>
+            <div>
+              <div class="ng-col-title mat">Material Problem</div>
+              <div class="ng-rows" id="ng-mat"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS BAR -->
+      <div class="status-bar">
+        <span><span class="status-dot"></span>LIVE — Auto-refresh 30s</span>
+        <span id="last-updated">Last updated: —</span>
+        <span id="db-status">DB: Not connected (demo mode)</span>
+      </div>
+
+    </div>
+
+    <script>
+      /* ── DEMO DATA ── */
+      const DEMO_DATA = {
+        lines: [
+          { id: "line1", label: "Conrad Line 1" },
+          { id: "line2", label: "Conrad Line 2" },
+          { id: "line3", label: "Conrad Line 3" },
+        ],
+        shifts: [
+          { id: "1", label: "Shift 1" },
+          { id: "2", label: "Shift 2" },
+          { id: "3", label: "Shift 3" },
+        ],
+        user: { role: "USER", name: "NIK" },
+        kpis: {
+          total: { value: 8472, badge: "+2.1%", type: "pos" },
+          good:  { value: 8149, badge: "+1.4%", type: "pos" },
+          ng:    { value: 323,  badge: "-0.3%", type: "neg" },
+          perf:  { value: "87.4%", badge: "+3.2%", type: "pos" },
+          stop:  { value: "47 min", badge: "+12m", type: "neg" },
+        },
+        info: { cycleTime: "24.3 sec", model: "NF60", partNo: "123456789", operators: "5 Orang" },
+        flowProcess: [
+          [
+            "OP10 (Grinding)",
+            "OP20 (Turning)",
+            "OP30 (Milling)",
+            "OP40 (Inspect)",
+            "OP50 (Pack)",
+            "OP10 (Grinding)",
+            "OP20 (Turning)",
+            "OP30 (Milling)",
+            "OP40 (Inspect)",
+            "OP50 (Pack)",
+            "OP10 (Grinding)",
+            "OP20 (Turning)",
+            "OP30 (Milling)",
+            "OP40 (Inspect)",
+            "OP50 (Pack)",
+          ]],
+          
+        ngTypes: {
+          machining: [
+            { time: "14:52", qty: "10 (Qty)" },
+            { time: "13:40", qty: "7 (Qty)" },
+            { time: "12:15", qty: "4 (Qty)" },
+            { time: "11:00", qty: "8 (Qty)" },
+            { time: "10:30", qty: "3 (Qty)" },
+          ],
+          material: [
+            { time: "14:52", qty: "10 (Qty)" },
+            { time: "13:50", qty: "5 (Qty)" },
+            { time: "12:30", qty: "9 (Qty)" },
+            { time: "11:20", qty: "2 (Qty)" },
+            { time: "10:05", qty: "7 (Qty)" },
+          ],
+        },
+      };
+
+      const TREND_DATA = {
+        hourly: {
+          labels: ["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00"],
+          good:   [820,910,870,940,900,880,860,830,810,780],
+          ng:     [30,18,22,15,20,25,28,35,38,42],
+          target: [850,850,850,850,850,850,850,850,850,850],
+        },
+        daily: {
+          labels: ["Mon","Tue","Wed","Thu","Fri","Sat"],
+          good:   [7800,8100,8500,7900,8200,8149],
+          ng:     [280,310,260,340,290,323],
+          target: [8000,8000,8000,8000,8000,8000],
+        },
+        weekly: {
+          labels: ["Wk 34","Wk 35","Wk 36","Wk 37","Wk 38"],
+          good:   [39000,41200,38700,42100,40300],
+          ng:     [1400,1600,1200,1700,1500],
+          target: [40000,40000,40000,40000,40000],
+        },
+      };
+
+      const PROGRESS_DATA = {
+        today: {
+          labels: ["TIME 1","TIME 2","TIME 3","TIME 4"],
+          plan:   [1600,1800,1900,1400],
+          actual: [1200,900,1100,700],
+        },
+        week: {
+          labels: ["Mon","Tue","Wed","Thu","Fri","Sat"],
+          plan:   [8000,8000,8000,8000,8000,4000],
+          actual: [7900,8100,8500,7800,8200,3200],
+        },
+      };
+
+      let state = { line:"line2", shift:"2", trendInterval:"hourly", progressView:"today" };
+      let trendChart, progressChart;
+
+      /* ── CLOCK ── */
+      function updateClock() {
+        const now = new Date();
+        const days   = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        document.getElementById("live-date").textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+        document.getElementById("live-time").textContent = now.toLocaleTimeString("id-ID",{hour12:false}) + " WIB";
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      /* ── DROPDOWNS ── */
+      function populateDropdowns() {
+        const lineEl = document.getElementById("select-line");
+        const shiftEl = document.getElementById("select-shift");
+        DEMO_DATA.lines.forEach(l => {
+          const o = document.createElement("option");
+          o.value = l.id; o.textContent = l.label;
+          if (l.id === state.line) o.selected = true;
+          lineEl.appendChild(o);
+        });
+        DEMO_DATA.shifts.forEach(s => {
+          const o = document.createElement("option");
+          o.value = s.id; o.textContent = s.label;
+          if (s.id === state.shift) o.selected = true;
+          shiftEl.appendChild(o);
+        });
+      }
+
+      function handleLineChange(val)  { state.line  = val; refreshAll(); }
+      function handleShiftChange(val) { state.shift = val; refreshAll(); }
+
+      /* ── KPI ── */
+      function renderKPIs(d) {
+        document.getElementById("kpi-total").textContent       = d.total.value.toLocaleString("id-ID");
+        document.getElementById("kpi-total-badge").textContent = d.total.badge;
+        document.getElementById("kpi-good").textContent        = d.good.value.toLocaleString("id-ID");
+        document.getElementById("kpi-good-badge").textContent  = d.good.badge;
+        document.getElementById("kpi-ng").textContent          = d.ng.value.toLocaleString("id-ID");
+        document.getElementById("kpi-ng-badge").textContent    = d.ng.badge;
+        document.getElementById("kpi-perf").textContent        = d.perf.value;
+        document.getElementById("kpi-perf-badge").textContent  = d.perf.badge;
+        document.getElementById("kpi-stop").textContent        = d.stop.value;
+        document.getElementById("kpi-stop-badge").textContent  = d.stop.badge;
+      }
+
+      /* ── INFO BAR ── */
+      function renderInfo(d) {
+        document.getElementById("info-cycle").textContent    = d.cycleTime;
+        document.getElementById("info-model").textContent    = d.model;
+        document.getElementById("info-part").textContent     = d.partNo;
+        document.getElementById("info-operator").textContent = d.operators;
+        const line = DEMO_DATA.lines.find(l => l.id === state.line);
+        document.getElementById("active-line-label").textContent = `${line ? line.label : ""} · Shift ${state.shift}`;
+      }
+
+      /* ── TREND CHART ── */
+      const chartDefaults = {
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#1c2333", titleColor: "#94a3b8",
+            bodyColor: "#e2e8f0", borderColor: "rgba(255,255,255,0.08)",
+            borderWidth: 1, padding: 10,
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: { color: "#64748b", font: { family: "JetBrains Mono", size: 10 } },
+          },
+          y: {
+            grid: { color: "rgba(255,255,255,0.04)" },
+            ticks: { color: "#64748b", font: { family: "JetBrains Mono", size: 10 } },
+          },
+        },
+      };
+
+      function buildTrendChart() {
+        const d = TREND_DATA[state.trendInterval];
+        const ctx = document.getElementById("trendChart").getContext("2d");
+        if (trendChart) trendChart.destroy();
+        trendChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: d.labels,
+            datasets: [
+              { label:"Good", data:d.good, borderColor:"#3b82f6", backgroundColor:"rgba(59,130,246,0.08)", borderWidth:2.5, pointRadius:3, pointBackgroundColor:"#3b82f6", tension:0.4, fill:true },
+              { label:"NG",   data:d.ng,   borderColor:"#f59e0b", backgroundColor:"rgba(245,158,11,0.07)",  borderWidth:2, pointRadius:3, pointBackgroundColor:"#f59e0b", tension:0.4, fill:false, yAxisID:"yNG" },
+              { label:"Target", data:d.target, borderColor:"#10b981", borderWidth:1.5, borderDash:[6,4], pointRadius:0, tension:0, fill:false },
+            ],
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            interaction:{mode:"index",intersect:false},
+            ...chartDefaults,
+            scales: {
+              ...chartDefaults.scales,
+              yNG: {
+                position:"right",
+                grid:{display:false},
+                ticks:{color:"#f59e0b", font:{family:"JetBrains Mono",size:10}},
+              },
+            },
+          },
+        });
+      }
+
+      function setTrendInterval(interval, btn) {
+        state.trendInterval = interval;
+        btn.closest(".pill-group").querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        buildTrendChart();
+      }
+
+      /* ── PROGRESS CHART ── */
+      function buildProgressChart() {
+        const d = PROGRESS_DATA[state.progressView];
+        const ctx = document.getElementById("progressChart").getContext("2d");
+        if (progressChart) progressChart.destroy();
+        progressChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: d.labels,
+            datasets: [
+              { label:"Plan",   data:d.plan,   backgroundColor:"rgba(59,130,246,0.25)", borderColor:"rgba(59,130,246,0.4)", borderWidth:1, borderRadius:5 },
+              { label:"Actual", data:d.actual, backgroundColor:"#3b82f6",               borderColor:"#60a5fa",               borderWidth:1, borderRadius:5 },
+            ],
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            ...chartDefaults,
+            scales: {
+              x: { ...chartDefaults.scales.x, grid:{display:false} },
+              y: { ...chartDefaults.scales.y },
+            },
+          },
+        });
+      }
+
+      function setProgressView(view, btn) {
+        state.progressView = view;
+        btn.closest(".pill-group").querySelectorAll(".pill-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        buildProgressChart();
+      }
+
+      /* ── FLOW PROCESS ── */
+      function renderFlowProcess(chains) {
+        const grid = document.getElementById("flow-grid");
+        grid.innerHTML = "";
+        const MAX = 5;
+        let total = 0;
+
+        chains.forEach(chain => {
+          for (let i = 0; i < chain.length; i += MAX) {
+            let slice = chain.slice(i, i + MAX);
+            if ((i / MAX) % 2 === 1) slice = slice.reverse();
+
+            const row = document.createElement("div");
+            row.className = "flow-row";
+
+            slice.forEach((node, idx) => {
+              total++;
+              const n = document.createElement("div");
+              n.className = "flow-node";
+              n.textContent = node.length > 18 ? node.substring(0,18)+"…" : node;
+              row.appendChild(n);
+              if (idx < slice.length - 1) {
+                const arrow = document.createElement("div");
+                arrow.className = "flow-arrow";
+                row.appendChild(arrow);
+              }
+            });
+
+            grid.appendChild(row);
+          }
+        });
+
+        document.getElementById("flow-count").textContent = total + " Processes";
+      }
+
+      /* ── NG TYPES ── */
+      function renderNgTypes(data) {
+        document.getElementById("ng-mach").innerHTML = data.machining.map(r =>
+          `<div class="ng-row"><span class="ng-time">${r.time}</span><span class="ng-qty">${r.qty}</span></div>`
+        ).join("");
+        document.getElementById("ng-mat").innerHTML = data.material.map(r =>
+          `<div class="ng-row"><span class="ng-time">${r.time}</span><span class="ng-qty">${r.qty}</span></div>`
+        ).join("");
+      }
+
+      function refreshNgData() { renderNgTypes(DEMO_DATA.ngTypes); }
+
+      /* ── USER ── */
+      function renderUser(u) {
+        document.getElementById("user-role").textContent = u.role;
+        document.getElementById("user-name").textContent = u.name;
+        document.getElementById("avatar-initials").textContent = u.name.charAt(0);
+      }
+
+      /* ── MAIN REFRESH ── */
+      function refreshAll() {
+        renderKPIs(DEMO_DATA.kpis);
+        renderInfo(DEMO_DATA.info);
+        renderFlowProcess(DEMO_DATA.flowProcess);
+        renderNgTypes(DEMO_DATA.ngTypes);
+        buildTrendChart();
+        buildProgressChart();
+        renderUser(DEMO_DATA.user);
+        document.getElementById("last-updated").textContent =
+          "Last updated: " + new Date().toLocaleTimeString("id-ID",{hour12:false});
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        populateDropdowns();
+        refreshAll();
+        setInterval(refreshAll, 30_000);
+      });
+    </script>
+  </body>
+</html>
