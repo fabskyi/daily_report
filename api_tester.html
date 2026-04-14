@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester - Production Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .test-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-info {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #8e44ad;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .response-panel {
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 200px;
+        }
+        
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .response-title {
+            color: #ecf0f1;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-success {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .status-error {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .status-pending {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        pre {
+            background: #1e272e;
+            color: #0be881;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Production Dashboard API Tester</h1>
+        
+        <div class="test-panel">
+            <h2 style="margin-bottom: 20px; color: #34495e;">API Configuration</h2>
+            
+            <div class="form-group">
+                <label>API Base URL</label>
+                <input type="text" id="apiUrl" value="api.php" placeholder="api.php">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Line</label>
+                    <select id="line">
+                        <option value="CR1">Conrad Line 1</option>
+                        <option value="CR2" selected>Conrad Line 2</option>
+                        <option value="CR3">Conrad Line 3</option>
+                        <option value="CR4">Conrad Line 4</option>
+                        <option value="CR5">Conrad Line 5</option>
+                        <option value="CR6">Conrad Line 6</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Shift</label>
+                    <select id="shift">
+                        <option value="1">Shift 1</option>
+                        <option value="2" selected>Shift 2</option>
+                        <option value="3">Shift 3</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="date" value="2026-04-13">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="testAPI('get_lines')">Get Lines</button>
+                <button class="btn-primary" onclick="testAPI('get_shifts')">Get Shifts</button>
+                <button class="btn-success" onclick="testAPI('get_kpis')">Get KPIs</button>
+                <button class="btn-success" onclick="testAPI('get_info')">Get Info</button>
+                <button class="btn-info" onclick="testAPI('get_production_table', {view: 'today'})">Production Table (Today)</button>
+                <button class="btn-info" onclick="testAPI('get_production_table', {view: 'week'})">Production Table (Week)</button>
+                <button class="btn-warning" onclick="testAPI('get_progress_chart', {view: 'today'})">Chart (Today)</button>
+                <button class="btn-warning" onclick="testAPI('get_progress_chart', {view: 'week'})">Chart (Week)</button>
+                <button class="btn-info" onclick="testAPI('get_ng_types')">Get NG Types</button>
+                <button class="btn-success" onclick="testAPI('get_user')">Get User</button>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Requests</div>
+                <div class="stat-value" id="totalRequests">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Successful</div>
+                <div class="stat-value" id="successRequests" style="color: #2ecc71;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Failed</div>
+                <div class="stat-value" id="failedRequests" style="color: #e74c3c;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Response Time</div>
+                <div class="stat-value" id="avgTime">0ms</div>
+            </div>
+        </div>
+        
+        <div class="response-panel">
+            <div class="response-header">
+                <span class="response-title">API Response</span>
+                <span class="status-badge status-pending" id="statusBadge">Ready</span>
+            </div>
+            <pre id="responseOutput">Waiting for API call...</pre>
+        </div>
+    </div>
+    
+    <script>
+        let stats = {
+            total: 0,
+            success: 0,
+            failed: 0,
+            times: []
+        };
+        
+        function updateStats() {
+            document.getElementById('totalRequests').textContent = stats.total;
+            document.getElementById('successRequests').textContent = stats.success;
+            document.getElementById('failedRequests').textContent = stats.failed;
+            
+            if (stats.times.length > 0) {
+                const avg = stats.times.reduce((a, b) => a + b, 0) / stats.times.length;
+                document.getElementById('avgTime').textContent = Math.round(avg) + 'ms';
+            }
+        }
+        
+        async function testAPI(action, extraParams = {}) {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const line = document.getElementById('line').value;
+            const shift = document.getElementById('shift').value;
+            const date = document.getElementById('date').value;
+            
+            const params = new URLSearchParams({
+                action,
+                line,
+                shift,
+                date,
+                ...extraParams
+            });
+            
+            const url = `${apiUrl}?${params}`;
+            
+            const statusBadge = document.getElementById('statusBadge');
+            const responseOutput = document.getElementById('responseOutput');
+            
+            statusBadge.textContent = 'Loading...';
+            statusBadge.className = 'status-badge status-pending';
+            responseOutput.textContent = 'Fetching data...\n\nURL: ' + url;
+            
+            const startTime = performance.now();
+            stats.total++;
+            
+            try {
+                const response = await fetch(url);
+                const endTime = performance.now();
+                const responseTime = endTime - startTime;
+                stats.times.push(responseTime);
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    stats.success++;
+                    statusBadge.textContent = `Success (${Math.round(responseTime)}ms)`;
+                    statusBadge.className = 'status-badge status-success';
+                } else {
+                    stats.failed++;
+                    statusBadge.textContent = `Error (${Math.round(responseTime)}ms)`;
+                    statusBadge.className = 'status-badge status-error';
+                }
+                
+                const output = {
+                    url: url,
+                    responseTime: Math.round(responseTime) + 'ms',
+                    status: response.status,
+                    data: data
+                };
+                
+                responseOutput.textContent = JSON.stringify(output, null, 2);
+                
+            } catch (error) {
+                const endTime = performance.now();
+                const responseTime = endTime - startTime;
+                
+                stats.failed++;
+                stats.times.push(responseTime);
+                
+                statusBadge.textContent = `Failed (${Math.round(responseTime)}ms)`;
+                statusBadge.className = 'status-badge status-error';
+                
+                responseOutput.textContent = JSON.stringify({
+                    url: url,
+                    responseTime: Math.round(responseTime) + 'ms',
+                    error: error.message,
+                    stack: error.stack
+                }, null, 2);
+            }
+            
+            updateStats();
+        }
+        
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+    </script>
+</body>
+</html>

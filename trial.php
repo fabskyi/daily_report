@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Production Line Dashboard</title>
+    <title>Productivity Ratio </title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
@@ -416,9 +416,9 @@
       <!-- HEADER -->
       <header>
         <div class="header-left">
-          <div class="logo-box">PL</div>
+          <div class="logo"><img src="assets/yanmar.png" alt="Logo" width="40" height="40"></div>
           <div class="header-title">
-            <h1>Production Line Dashboard</h1>
+            <h1>DASHBOARD</h1>
             <p id="active-line-label">Loading…</p>
           </div>
           <div class="divider-v"></div>
