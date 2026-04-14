@@ -650,13 +650,13 @@ if ($selectedShiftCode) {
                         <label>Classification Stoptime</label>
                         <select name="classification_stoptime" id="classificationStoptime">
                             <option value="">-- Pilih Klasifikasi --</option>
-                            <option value="Tool Problem">Machine Breakdown</option>
-                            <option value="">Material Shortage</option>
-                            <option value="setup_changeover">Setup / Changeover</option>
-                            <option value="quality_issue">Quality Issue</option>
-                            <option value="operator_issue">Operator Issue</option>
-                            <option value="utility_failure">Utility Failure (Listrik/Air/Udara)</option>
-                            <option value="planned_maintenance">Planned Maintenance</option>
+                            <option value="tool_problem">Tool Problem</option>
+                            <option value="machining_problem">Machining Problem</option>
+                            <option value="setting_tool">Setting Tool</option>
+                            <option value="material_problem">Material Problem</option>
+                            <option value="ganti_model">Ganti Model</option>
+                            <option value="quality_check">Quality Check</option>
+                            <option value="stop_by_management">Stop By Management</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
